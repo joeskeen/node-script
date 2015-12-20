@@ -1,14 +1,14 @@
-#node-script
+# node-script
 
 `node-script` is a command-line utility for running self-contained Node.JS scripts
 
-##Installation
+## Installation
 
 ```bash
 npm install -g node-script
 ```
 
-##Usage
+## Usage
 
 ```bash
 node-script [options] script [script options]
@@ -23,15 +23,15 @@ automatically ensure that all dependencies are installed before running your scr
 which means you can share and run single-file scripts without requiring a `package.json`
 file or first running the `npm install` command.
 
-###Example
+### Example
 
 ```js
 //echo-sorted.js
 script({
-	name: 'echo-sorted',
-	dependencies: {
-		'lodash': '*'
-	}
+    name: 'echo-sorted',
+    dependencies: {
+        'lodash': '*'
+    }
 });
 
 var _ = require('lodash');
@@ -45,15 +45,17 @@ console.log(sorted.join(' '));
 a is only test This
 ```
 
-##API
+## API
 
-###`script(metadata)` function
+### `script(metadata)` function
+
 `script` is a global when running `node-script`, and allows you to pass a `metadata`
 object containing information about your script.  You can include anything you would
 put in a `package.json` file (name, author, license, version, etc.), but the only thing
 `node-script` currently cares about is the `dependencies` value.  See
-https://docs.npmjs.com/files/package.json#dependencies for documentation on how to use
+<https://docs.npmjs.com/files/package.json#dependencies> for documentation on how to use
 the `dependencies` option.
 
-##License
+## License
+
 MIT
