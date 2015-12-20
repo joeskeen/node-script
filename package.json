@@ -1,9 +1,9 @@
 {
   "name": "node-script",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A command-line utility for running self-contained Node.JS scripts",
   "bin": {
-    "node-script": "bin/node-script.js"
+    "node-script": "node bin/node-script.js"
   },
   "scripts": {
     "build": "gulp build",
