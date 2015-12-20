@@ -6,6 +6,7 @@
 import gulp = require('gulp');
 import ts = require('gulp-typescript');
 import uglify = require('gulp-uglify');
+const header = require('gulp-header');
 
 gulp.task('build', build);
 
@@ -15,5 +16,6 @@ function build() {
 			module: 'commonjs'
 		}))
 		.pipe(uglify())
+		.pipe(header('#!/usr/bin/env node\n'))
 		.pipe(gulp.dest('bin'));
 }
