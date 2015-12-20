@@ -1,0 +1,35 @@
+{
+  "name": "node-script",
+  "version": "0.1.0",
+  "description": "A command-line utility for running self-contained Node.JS scripts",
+  "bin": {
+    "node-script": "bin/node-script.js"
+  },
+  "scripts": {
+    "build": "gulp build",
+    "test": "echo \"TODO: Add tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeskeen/node-script.git"
+  },
+  "author": {
+    "name": "Joe Skeen",
+    "url": "https://github.com/joeskeen"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joeskeen/node-script/issues"
+  },
+  "homepage": "https://github.com/joeskeen/node-script#readme",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-typescript": "^2.10.0",
+    "gulp-uglify": "^1.5.1",
+    "ts-node": "^0.5.4",
+    "typescript": "^1.7.5"
+  },
+  "dependencies": {
+    "yargs": "^3.31.0"
+  }
+}
