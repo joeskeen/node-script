@@ -12,10 +12,11 @@ gulp.task('build', build);
 
 function build() {
 	return gulp.src('src/*.ts')
-		.pipe(ts({
-			module: 'commonjs'
-		}))
-		.pipe(uglify())
-		.pipe(header('#!/usr/bin/env node\n'))
-		.pipe(gulp.dest('bin'));
+                .pipe(ts({
+                    target: 'ES2015',
+                    module: 'commonjs'
+                }))
+                // .pipe(uglify()) //TODO: uglify doesn't seem to work with ES6
+                .pipe(header('#!/usr/bin/env node\n'))
+                .pipe(gulp.dest('bin'));
 }

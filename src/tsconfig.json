@@ -1,10 +1,7 @@
 {
-	"compilerOptions": {
-		"target": "ES5",
-		"module": "commonjs",
-		"sourceRoot": "src"
-	},
-	"exclude": [
-		"typings"
-	]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "outFile": "node-script.js"
+    }
 }

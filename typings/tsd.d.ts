@@ -6,3 +6,4 @@
 /// <reference path="gulp-typescript/gulp-typescript.d.ts" />
 /// <reference path="lodash/lodash.d.ts" />
 /// <reference path="yargs/yargs.d.ts" />
+/// <reference path="chalk/chalk.d.ts" />
