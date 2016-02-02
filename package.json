@@ -32,7 +32,9 @@
   },
   "dependencies": {
     "chalk": "^1.1.1",
+    "interpret": "^1.0.0",
     "request-promise": "^2.0.0",
+    "semver": "^5.1.0",
     "yargs": "^3.31.0"
   },
   "preferGlobal": true

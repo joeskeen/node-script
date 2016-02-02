@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../typings/interpret.d.ts" />
 /// <reference path="../node-script.d.ts" />
 'use strict';
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promise, generator) {
@@ -22,19 +23,23 @@ var path_1 = require('path');
 var childProcess = require('child_process');
 var chalk = require('chalk');
 var fs = require('fs');
+var semver = require('semver');
+var interpret_1 = require('interpret');
 var _2promise_1 = require('./2promise');
 const writeFileAsync = (file, data) => _2promise_1.fromErrCallback(fs.writeFile, fs, [file, data]);
 const existsAsync = (file) => _2promise_1.fromNoErrCallback(fs.exists, fs, file);
 const mkdirAsync = (dir) => _2promise_1.fromErrCallback(fs.mkdir, fs, dir);
 const readFileAsync = (file) => _2promise_1.fromErrCallback(fs.readFile, fs, file);
 const settingsFileName = 'node-script.json';
+let verbose = false;
+let environment;
 run();
 function run() {
     return __awaiter(this, void 0, Promise, function* () {
         try {
             const args = parseArgs();
-            const environment = yield initializeNodeScript();
-            yield runScript(environment, args);
+            environment = yield initializeNodeScript();
+            yield runScript(args);
         }
         catch (error) {
             console.error(chalk.bold.red('Error running script'));
@@ -74,6 +79,7 @@ function parseArgs() {
     const nodeScriptArgs = process.argv.slice(0, scriptFileArgIndex);
     const scriptArgs = process.argv.slice(scriptFileArgIndex);
     const args = setupOptions(yargs(nodeScriptArgs)).argv;
+    verbose = args.verbose;
     return {
         nodeScriptArgs: args,
         scriptArgs,
@@ -89,40 +95,98 @@ function parseArgs() {
         });
     }
 }
-function runScript(environment, args) {
+function runScript(args) {
     return __awaiter(this, void 0, Promise, function* () {
         const verbose = args.nodeScriptArgs.verbose;
-        global['script'] = (config) => {
-            log('script with config: ', config);
-            if (config && config.dependencies) {
-                const dependencies = config.dependencies;
-                //TODO: Only 'NPM install' if needed for each package (use 'semver' module to check)
-                //TODO: run script from temp location so installed node modules don't pollute the CWD
-                const packages = Object.keys(dependencies).map(packageName => `${packageName}@${dependencies[packageName]}`);
-                const command = `npm install ${packages.join(' ')} --prefix ${environment.settingsDir}`;
-                childProcess.execSync(command, {
-                    stdio: verbose ? [0, 1, 2] : [],
-                });
-                log(packages);
-            }
-        };
+        global['script'] = script;
         log('process.argv', process.argv);
         log('nodeScriptArgs', args.nodeScriptArgs);
         log('scriptArgs', args.scriptArgs);
         process.argv.length = 0;
         args.scriptArgs.forEach(arg => process.argv.push(arg));
         const scriptContents = yield getScriptContents(args.scriptFile, environment.scriptsDir);
-        const destinationPath = path_1.join(environment.scriptsDir, path_1.basename(args.scriptFile));
+        const scriptBaseName = path_1.basename(args.scriptFile);
+        const destinationPath = path_1.join(environment.scriptsDir, scriptBaseName);
         yield writeFileAsync(destinationPath, scriptContents);
-        log(`running script ${args.scriptFile}...`);
         //TODO: use 'interpret' module to determine which JS variant loaders we need to register (.ts, .coffee, etc.)
-        require(destinationPath);
-        function log(title, logObj) {
-            if (verbose) {
-                console.log.apply(this, arguments);
+        const extension = Object.keys(interpret_1.extensions)
+            .sort((a, b) => b.length - a.length)
+            .filter(ext => scriptBaseName.endsWith(ext))[0];
+        if (!extension) {
+            throw new Error(`Can't find a suitable module loader for ${scriptBaseName} (using 'interpret' https://github.com/js-cli/js-interpret/blob/master/index.js)`);
+        }
+        const loader = interpret_1.extensions[extension];
+        if (loader) {
+            let isLoaded = false;
+            let loaderModules = Array.isArray(loader)
+                ? loader
+                : [loader];
+            loaderModules.forEach(module => {
+                if (isLoaded)
+                    return;
+                const moduleInfo = typeof module === 'string'
+                    ? { module: module, register: null }
+                    : module;
+                try {
+                    const modName = moduleInfo.module.split('/')[0];
+                    if (!isInstalled(modName)) {
+                        npmInstall(modName);
+                    }
+                    require(moduleInfo.module);
+                    isLoaded = true;
+                }
+                catch (error) {
+                }
+            });
+            if (!isLoaded) {
+                throw new Error(`Can't find a suitable module loader for ${scriptBaseName} (using 'interpret' https://github.com/js-cli/js-interpret/blob/master/index.js)`);
             }
         }
+        log(`script extension: ${extension}`);
+        log(`running script ${scriptBaseName}...`);
+        require(destinationPath);
     });
+}
+function script(config) {
+    log('script with config: ', config);
+    if (config && config.dependencies) {
+        const dependenciesToInstall = Object.keys(config.dependencies)
+            .map(name => ({ moduleName: name, version: config.dependencies[name] }))
+            .filter(mod => !isInstalled(mod.moduleName, mod.version))
+            .map(mod => `${mod.moduleName}@${mod.version}`)
+            .join(' ')
+            .trim();
+        if (dependenciesToInstall)
+            npmInstall(dependenciesToInstall);
+    }
+}
+function npmInstall(packages) {
+    const command = `npm install ${packages} --prefix ${environment.settingsDir}`;
+    log(`installing the following packages: ${packages}`);
+    childProcess.execSync(command, {
+        stdio: verbose ? [0, 1, 2] : [],
+    });
+}
+function log(title, logObj) {
+    if (verbose) {
+        console.log.apply(this, arguments);
+    }
+}
+//must be synchronous since it is called during script setup
+function isInstalled(moduleName, version) {
+    version = semver.valid(version) || '*';
+    const modulePackageJson = path_1.join(environment.settingsDir, 'node_modules', moduleName, 'package.json');
+    if (!(fs.existsSync(modulePackageJson))) {
+        log(`couldn't find module dir for ${moduleName}`);
+        return false;
+    }
+    const json = JSON.parse(fs.readFileSync(modulePackageJson).toString());
+    const moduleVersion = json.version;
+    const versionValid = semver.satisfies(moduleVersion, version);
+    if (!versionValid) {
+        log(`Found module dir for ${module}, but requested version ${version} wasn't satisfied by ${moduleVersion}`);
+    }
+    return versionValid;
 }
 function getScriptContents(scriptFile, scriptDir) {
     return __awaiter(this, void 0, Promise, function* () {

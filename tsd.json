@@ -43,6 +43,9 @@
     },
     "bluebird/bluebird.d.ts": {
       "commit": "717a5fdb079f8dd7c19f1b22f7f656dd990f0ccf"
+    },
+    "semver/semver.d.ts": {
+      "commit": "c2939250ec2d1ecdc82fce62afb9354dd14909ea"
     }
   }
 }
