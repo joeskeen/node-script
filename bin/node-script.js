@@ -15,6 +15,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, Promi
         step("next", void 0);
     });
 };
+var request = require('request-promise');
+var url = require('url');
 var yargs = require('yargs');
 var path_1 = require('path');
 var childProcess = require('child_process');
@@ -109,11 +111,10 @@ function runScript(environment, args) {
         log('scriptArgs', args.scriptArgs);
         process.argv.length = 0;
         args.scriptArgs.forEach(arg => process.argv.push(arg));
-        const scriptPath = path_1.resolve(process.cwd(), args.scriptFile);
-        const scriptContents = yield readFileAsync(scriptPath);
+        const scriptContents = yield getScriptContents(args.scriptFile, environment.scriptsDir);
         const destinationPath = path_1.join(environment.scriptsDir, path_1.basename(args.scriptFile));
         yield writeFileAsync(destinationPath, scriptContents);
-        log(`running script ${scriptPath}...`);
+        log(`running script ${args.scriptFile}...`);
         //TODO: use 'interpret' module to determine which JS variant loaders we need to register (.ts, .coffee, etc.)
         require(destinationPath);
         function log(title, logObj) {
@@ -121,5 +122,27 @@ function runScript(environment, args) {
                 console.log.apply(this, arguments);
             }
         }
+    });
+}
+function getScriptContents(scriptFile, scriptDir) {
+    return __awaiter(this, void 0, Promise, function* () {
+        try {
+            const scriptUrl = url.parse(scriptFile);
+            if (scriptUrl.hostname) {
+                return yield request.get(scriptFile);
+            }
+            const relativePath = path_1.resolve(process.cwd(), scriptFile);
+            if (yield existsAsync(relativePath)) {
+                return (yield readFileAsync(relativePath)).toString();
+            }
+            const scriptFolderPath = path_1.resolve(scriptDir, scriptFile);
+            if (yield existsAsync(scriptFolderPath)) {
+                return (yield readFileAsync(scriptFolderPath)).toString();
+            }
+        }
+        catch (error) {
+            throw new Error(`Error while loading script file ${scriptFile}: ${error}`);
+        }
+        throw new Error(`Unable to find script file ${scriptFile}`);
     });
 }

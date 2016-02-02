@@ -7,3 +7,7 @@
 /// <reference path="lodash/lodash.d.ts" />
 /// <reference path="yargs/yargs.d.ts" />
 /// <reference path="chalk/chalk.d.ts" />
+/// <reference path="bluebird/bluebird.d.ts" />
+/// <reference path="form-data/form-data.d.ts" />
+/// <reference path="request-promise/request-promise.d.ts" />
+/// <reference path="request/request.d.ts" />

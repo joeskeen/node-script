@@ -15,7 +15,7 @@
       "commit": "40c60850ad6c8175a62d5ab48c4e016ea5b3dffe"
     },
     "node/node.d.ts": {
-      "commit": "40c60850ad6c8175a62d5ab48c4e016ea5b3dffe"
+      "commit": "717a5fdb079f8dd7c19f1b22f7f656dd990f0ccf"
     },
     "gulp-uglify/gulp-uglify.d.ts": {
       "commit": "40c60850ad6c8175a62d5ab48c4e016ea5b3dffe"
@@ -31,6 +31,18 @@
     },
     "chalk/chalk.d.ts": {
       "commit": "5d0f2126c8dac8fce0ff020218aea06607213b0d"
+    },
+    "request-promise/request-promise.d.ts": {
+      "commit": "717a5fdb079f8dd7c19f1b22f7f656dd990f0ccf"
+    },
+    "request/request.d.ts": {
+      "commit": "717a5fdb079f8dd7c19f1b22f7f656dd990f0ccf"
+    },
+    "form-data/form-data.d.ts": {
+      "commit": "717a5fdb079f8dd7c19f1b22f7f656dd990f0ccf"
+    },
+    "bluebird/bluebird.d.ts": {
+      "commit": "717a5fdb079f8dd7c19f1b22f7f656dd990f0ccf"
     }
   }
 }

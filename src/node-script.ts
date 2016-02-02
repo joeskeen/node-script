@@ -2,6 +2,8 @@
 /// <reference path="../node-script.d.ts" />
 'use strict';
 
+import * as request from 'request-promise';
+import * as url from 'url';
 import * as yargs from 'yargs';
 import { join, resolve, basename } from 'path';
 import * as childProcess from 'child_process';
@@ -122,11 +124,10 @@ async function runScript(environment: NodeScriptEnvironment, args: Arguments) {
     log('scriptArgs', args.scriptArgs);
     process.argv.length = 0;
     args.scriptArgs.forEach(arg => process.argv.push(arg));
-    const scriptPath = resolve(process.cwd(), args.scriptFile);
-    const scriptContents = await readFileAsync(scriptPath);
+    const scriptContents = await getScriptContents(args.scriptFile, environment.scriptsDir);
     const destinationPath = join(environment.scriptsDir, basename(args.scriptFile));
     await writeFileAsync(destinationPath, scriptContents);
-    log(`running script ${scriptPath}...`);
+    log(`running script ${args.scriptFile}...`);
     //TODO: use 'interpret' module to determine which JS variant loaders we need to register (.ts, .coffee, etc.)
     require(destinationPath);
 
@@ -135,4 +136,27 @@ async function runScript(environment: NodeScriptEnvironment, args: Arguments) {
             console.log.apply(this, arguments);
         }
     }
+}
+
+async function getScriptContents(scriptFile: string, scriptDir: string) {
+    try {
+        const scriptUrl = url.parse(scriptFile);
+        if (scriptUrl.hostname) { 
+            return await request.get(scriptFile);
+        }
+        
+        const relativePath = resolve(process.cwd(), scriptFile);
+        if (await existsAsync(relativePath)) {
+            return (await readFileAsync(relativePath)).toString();
+        }
+        
+        const scriptFolderPath = resolve(scriptDir, scriptFile);
+        if (await existsAsync(scriptFolderPath)) {
+            return (await readFileAsync(scriptFolderPath)).toString();
+        }
+    } catch (error) {
+        throw new Error(`Error while loading script file ${scriptFile}: ${error}`);
+    }
+    
+    throw new Error(`Unable to find script file ${scriptFile}`);
 }
